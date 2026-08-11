@@ -79,4 +79,11 @@ export class CartService {
     const item = this.cart().items.find(i => i.product_id === productId);
     return item ? item.quantity : 0;
   }
+
+  clearCart() {
+    this.http.delete<Cart>(`${this.apiUrl}/cart`).subscribe({
+      next: (updatedCart) => this.cart.set(updatedCart),
+      error: (err) => console.error('Failed to clear cart', err)
+    });
+  }
 }

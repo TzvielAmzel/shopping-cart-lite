@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService } from './services/cart.service';
-import { Product } from './models/cart.model';
+import { Product, CartItem } from './models/cart.model';
 
 @Component({
   selector: 'app-root',
@@ -12,6 +12,10 @@ import { Product } from './models/cart.model';
 })
 export class App {
   cartService = inject(CartService);
+
+  isModalOpen = signal(false);
+  confirmedItems = signal<CartItem[]>([]);
+  confirmedTotal = signal<number>(0);
 
   addToCart(product: Product) {
     this.cartService.addToCart(product);
@@ -29,5 +33,18 @@ export class App {
 
   removeFromCart(productId: string) {
     this.cartService.updateQuantity(productId, 0);
+  }
+
+  confirmOrder() {
+    this.confirmedItems.set([...this.cartService.cartItems()]);
+    this.confirmedTotal.set(this.cartService.totalPrice());
+    this.isModalOpen.set(true);
+    this.cartService.clearCart();
+  }
+
+  startNewOrder() {
+    this.isModalOpen.set(false);
+    this.confirmedItems.set([]);
+    this.confirmedTotal.set(0);
   }
 }

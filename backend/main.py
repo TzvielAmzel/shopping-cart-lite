@@ -43,11 +43,31 @@ async def seed_products():
         return {"message": "Products already seeded"}
     
     sample_products = [
-        Product(name="Waffle with Berries", price=6.50, category="Waffle", image_url="https://via.placeholder.com/150"),
-        Product(name="Vanilla Bean Crème Brûlée", price=7.00, category="Crème Brûlée", image_url="https://via.placeholder.com/150"),
-        Product(name="Macaron Mix of Five", price=8.00, category="Macaron", image_url="https://via.placeholder.com/150"),
-        Product(name="Classic Tiramisu", price=5.50, category="Tiramisu", image_url="https://via.placeholder.com/150"),
-    ]
+    Product(
+        name="Waffle with Berries",
+        price=6.50,
+        category="Waffle",
+        image_url="https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=500&auto=format&fit=crop"
+    ),
+    Product(
+        name="Vanilla Bean Crème Brûlée",
+        price=7.00,
+        category="Crème Brûlée",
+        image_url="https://images.unsplash.com/photo-1470124182917-cc6e71b22ecc?w=500&auto=format&fit=crop"
+    ),
+    Product(
+        name="Macaron Mix of Five",
+        price=8.00,
+        category="Macaron",
+        image_url="https://images.unsplash.com/photo-1569864358642-9d1684040f43?w=500&auto=format&fit=crop"
+    ),
+    Product(
+        name="Classic Tiramisu",
+        price=5.50,
+        category="Tiramisu",
+        image_url="https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=500&auto=format&fit=crop"
+    ),
+]
     await Product.insert_many(sample_products)
     return {"message": "Products seeded successfully"}
 
@@ -78,4 +98,15 @@ async def add_or_update_cart_item(item: CartItem):
             cart.items.append(item)
             
     await cart.save()
+    return cart
+
+@app.delete("/api/cart", response_model=Cart)
+async def clear_cart():
+    cart = await Cart.find_one()
+    if cart:
+        cart.items = []
+        await cart.save()
+    else:
+        cart = Cart(items=[])
+        await cart.insert()
     return cart

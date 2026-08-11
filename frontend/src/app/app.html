@@ -4,36 +4,34 @@
   <div class="main-layout">
     <!-- Catalog Section -->
     <section class="products-grid">
-      <div class="product-card" *ngFor="let product of cartService.products()">
-        <img [src]="product.image_url" [alt]="product.name" class="product-image" />
-        
-        <div class="action-btn-container">
-          <!-- Button when product is not in cart -->
-          <button 
-            *ngIf="cartService.getProductQuantityInCart(product._id || '') === 0" 
-            class="btn-add" 
-            (click)="addToCart(product)"
-          >
-            Add to Cart
-          </button>
+      @for (product of cartService.products(); track product._id) {
+        <div class="product-card">
+          <img [src]="product.image_url" [alt]="product.name" class="product-image" />
+          
+          <div class="action-btn-container">
+            @if (cartService.getProductQuantityInCart(product._id || '') === 0) {
+              <button 
+                class="btn-add" 
+                (click)="addToCart(product)"
+              >
+                Add to Cart
+              </button>
+            } @else {
+              <div class="btn-counter">
+                <button (click)="decrementQuantity(product._id || '')">-</button>
+                <span>{{ cartService.getProductQuantityInCart(product._id || '') }}</span>
+                <button (click)="incrementQuantity(product._id || '')">+</button>
+              </div>
+            }
+          </div>
 
-          <!-- Counter controls when product is already in cart -->
-          <div 
-            *ngIf="cartService.getProductQuantityInCart(product._id || '') > 0" 
-            class="btn-counter"
-          >
-            <button (click)="decrementQuantity(product._id || '')">-</button>
-            <span>{{ cartService.getProductQuantityInCart(product._id || '') }}</span>
-            <button (click)="incrementQuantity(product._id || '')">+</button>
+          <div class="product-info">
+            <p class="category">{{ product.category }}</p>
+            <h3>{{ product.name }}</h3>
+            <p class="price">{{ product.price | currency:'USD' }}</p>
           </div>
         </div>
-
-        <div class="product-info">
-          <p class="category">{{ product.category }}</p>
-          <h3>{{ product.name }}</h3>
-          <p class="price">{{ product.price | currency:'USD' }}</p>
-        </div>
-      </div>
+      }
     </section>
 
     <!-- Cart Section -->
@@ -41,32 +39,73 @@
       <h2>Your Cart ({{ cartService.totalItemsCount() }})</h2>
 
       <!-- Empty Cart State -->
-      <div *ngIf="cartService.cartItems().length === 0" class="empty-cart">
-        <p>Your added items will appear here</p>
-      </div>
-
-      <!-- Cart Items List -->
-      <div *ngIf="cartService.cartItems().length > 0">
-        <div class="cart-item" *ngFor="let item of cartService.cartItems()">
-          <div class="item-details">
-            <h4>{{ item.name }}</h4>
-            <div class="item-price-info">
-              <span class="qty">{{ item.quantity }}x</span>
-              <span class="unit-price">&#64; ${{ item.price.toFixed(2) }}</span>
-              <span class="subtotal">${{ (item.price * item.quantity).toFixed(2) }}</span>
+      @if (cartService.cartItems().length === 0) {
+        <div class="empty-cart">
+          <p>Your added items will appear here</p>
+        </div>
+      } @else {
+        <!-- Cart Items List -->
+        <div>
+          @for (item of cartService.cartItems(); track item.product_id) {
+            <div class="cart-item">
+              <div class="item-details">
+                <h4>{{ item.name }}</h4>
+                <div class="item-price-info">
+                  <span class="qty">{{ item.quantity }}x</span>
+                  <span class="unit-price">{{ item.price | currency:'USD' }}</span>
+                  <span class="subtotal">{{ (item.price * item.quantity) | currency:'USD' }}</span>
+                </div>
+              </div>
+              <button class="btn-remove" (click)="removeFromCart(item.product_id)">&times;</button>
             </div>
+          }
+
+          <hr />
+
+          <!-- Order Total -->
+          <div class="order-total">
+            <span>Order Total</span>
+            <span class="total-price">{{ cartService.totalPrice() | currency:'USD' }}</span>
           </div>
-          <button class="btn-remove" (click)="removeFromCart(item.product_id)">&times;</button>
-        </div>
 
-        <hr />
-
-        <!-- Order Total -->
-        <div class="order-total">
-          <span>Order Total</span>
-          <span class="total-price">${{ cartService.totalPrice().toFixed(2) }}</span>
+          <!-- Confirm Order Button -->
+          <button class="btn-confirm-order" (click)="confirmOrder()">Confirm Order</button>
         </div>
-      </div>
+      }
     </aside>
   </div>
 </div>
+
+<!-- Order Confirmed Modal -->
+@if (isModalOpen()) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="check-icon">&#10003;</div>
+        <h2>Order Confirmed</h2>
+        <p>We hope you enjoy your food!</p>
+      </div>
+
+      <div class="modal-order-summary">
+        @for (item of confirmedItems(); track item.product_id) {
+          <div class="modal-item">
+            <div class="modal-item-info">
+              <strong>{{ item.name }}</strong>
+              <p><span class="qty">{{ item.quantity }}x</span> {{ item.price | currency:'USD' }}</p>
+            </div>
+            <div class="modal-item-subtotal">
+              {{ (item.price * item.quantity) | currency:'USD' }}
+            </div>
+          </div>
+        }
+        <hr />
+        <div class="modal-total">
+          <span>Order Total</span>
+          <strong>{{ confirmedTotal() | currency:'USD' }}</strong>
+        </div>
+      </div>
+
+      <button class="btn-new-order" (click)="startNewOrder()">Start New Order</button>
+    </div>
+  </div>
+}
